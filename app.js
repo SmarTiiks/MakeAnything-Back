@@ -21,7 +21,7 @@ const upload = multer({storage: storage});
 // method put et delete pour express
 const methodOverride = require('method-override');
 app.use(methodOverride('_method'));
-app.use(cors({credentials: true, origin: process.env.FRONTEND_URL + ''}));
+app.use(cors({credentials: true, origin: process.env.FRONTEND_URL}));
 
 // cookie parser
 const cookieParser = require('cookie-parser');
@@ -112,5 +112,5 @@ appModel.doAll(app);
 //   });
 
 var server = app.listen(5000, function(req, res) {
-    // console.log('Listening on %s on port %d', server.address.address, server.address().port);
+    console.log('Listening on %s on port %d', server.address.address, server.address().port);
 });
