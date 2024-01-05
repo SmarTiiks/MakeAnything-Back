@@ -60,7 +60,7 @@ app.set('view engine', 'ejs');
 //     });
 // });
 
-app.get('/getJwt', validateToken, function(req, res) {
+app.get('/getJwt', /*validateToken,*/ function(req, res) {
     console.log(req.cookies["access-token"]);
     if(req.cookies["access-token"]){
         const decoded = jwtDecode(req.cookies["access-token"]);
