@@ -61,7 +61,7 @@ app.set('view engine', 'ejs');
 // });
 
 app.get('/getJwt', /*validateToken,*/ function(req, res) {
-    console.log(req.cookies["access-token"]);
+    console.log(req.cookies);
     if(req.cookies["access-token"]){
         const decoded = jwtDecode(req.cookies["access-token"]);
         console.log(decoded);
