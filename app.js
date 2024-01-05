@@ -112,5 +112,5 @@ appModel.doAll(app);
 //   });
 
 var server = app.listen(5000, function(req, res) {
-    console.log('Listening on %s on port %d', server.address.address, server.address().port);
+    // console.log('Listening on %s on port %d', server.address.address, server.address().port);
 });
