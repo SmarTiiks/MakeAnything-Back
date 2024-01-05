@@ -35,7 +35,7 @@ function doAll(app) {
         .then( item => {
             console.log("Utilisateur créé");
             res.json("Utilisateur créé");
-            // res.redirect('http://localhost:3000/connexion');
+            // res.redirect(process.env.FRONTEND_URL + '/connexion');
         }).catch(err => {
             if(picture !== ""){
             fs.unlinkSync('uploads/' + picture);
@@ -57,7 +57,7 @@ function doAll(app) {
                         httpOnly: true
                     });
                     console.log("cookie created successfully");
-                    res.redirect('http://localhost:3000/');
+                    res.redirect(process.env.FRONTEND_URL + '/');
                     // res.json(accessToken);
                 } else {
                     return res.status(404).json("Invalid password");

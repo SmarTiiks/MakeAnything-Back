@@ -21,7 +21,7 @@ const upload = multer({storage: storage});
 // method put et delete pour express
 const methodOverride = require('method-override');
 app.use(methodOverride('_method'));
-app.use(cors({credentials: true, origin: 'http://localhost:3000'}));
+app.use(cors({credentials: true, origin: process.env.FRONTEND_URL + ''}));
 
 // cookie parser
 const cookieParser = require('cookie-parser');
@@ -82,7 +82,7 @@ app.get('/getJwt', validateToken, function(req, res) {
 //         Post.updateOne({_id: req.params.id}, {$set: Data})
 //         .then(dataset => {
 //             console.log("post updated to database");
-//             res.redirect('http://localhost:3000/blogs');
+//             res.redirect(process.env.FRONTEND_URL + '/blogs');
 //         }).catch(err => {
 //             console.log(err);
 //         });
