@@ -6,7 +6,7 @@ const {jwtDecode} = require('jwt-decode');
 const multer = require('multer');
 const express = require('express');
 const fs = require('fs');
-const { log } = require('console');
+var session = require('express-session');
 
 function doAll(app) {
     app.use(express.static('uploads'));
@@ -51,11 +51,14 @@ function doAll(app) {
             if(user){
                 if(bcrypt.compareSync(req.body.password, user.password)){
                     console.log('User found');
-                    const accessToken = createToken(user);
-                    res.cookie('access-token', accessToken, {
-                        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-                        httpOnly: true
-                    });
+                    // const accessToken = createToken(user);
+                    req.session.user = user;
+                    // res.cookie('access-token', accessToken, {
+                    //     maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+                    //     httpOnly: true
+                    //     // secure: true,
+                    //     // domain: process.env.FRONTEND_URL
+                    // });
                     console.log("cookie created successfully");
                     res.redirect(process.env.FRONTEND_URL + '/');
                     // res.json(accessToken);
@@ -84,7 +87,8 @@ function doAll(app) {
     });
 
     app.get('/logout', function(req, res) {
-        res.clearCookie('access-token');
+        // res.clearCookie('access-token');
+        req.session.destroy();
         console.log("token destroyed");
         res.json("token destroyed");
     });

@@ -4,6 +4,7 @@ var path = require('path');
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const cors = require('cors');
+var session = require('express-session');
 
 // Multer
 const multer = require('multer');
@@ -26,6 +27,14 @@ app.use(cors({credentials: true, origin: process.env.FRONTEND_URL}));
 // cookie parser
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
+
+// session
+app.use(session({
+    secret: process.env.SECRET,
+    resave: false,
+    saveUninitialized: true,
+    cookie: {secure: false}
+}));
 
 // JWT
 const {createToken, validateToken} = require('./JWT');
@@ -61,9 +70,10 @@ app.set('view engine', 'ejs');
 // });
 
 app.get('/getJwt', /*validateToken,*/ function(req, res) {
-    console.log(req.cookies);
-    if(req.cookies["access-token"]){
-        const decoded = jwtDecode(req.cookies["access-token"]);
+    console.log(req.session);
+    if(req.session.user){
+        // const decoded = jwtDecode(req.cookies["access-token"]);
+        const decoded = req.session.user;
         console.log(decoded);
         res.json(decoded);
     }
