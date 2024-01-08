@@ -53,6 +53,7 @@ function doAll(app) {
                     console.log('User found');
                     // const accessToken = createToken(user);
                     req.session.user = user;
+                    req.session.save();
                     // res.cookie('access-token', accessToken, {
                     //     maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
                     //     httpOnly: true
