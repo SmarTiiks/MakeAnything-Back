@@ -60,7 +60,9 @@ function doAll(app) {
                     //     // secure: true,
                     //     // domain: process.env.FRONTEND_URL
                     // });
+                    console.log(req.session);
                     console.log("cookie created successfully");
+                    console.log(req.session.user);
                     res.redirect(process.env.FRONTEND_URL + '/');
                     // res.json(accessToken);
                 } else {

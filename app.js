@@ -71,6 +71,7 @@ app.set('view engine', 'ejs');
 
 app.get('/getJwt', /*validateToken,*/ function(req, res) {
     console.log(req.session);
+    console.log(req.session.user);
     if(req.session.user){
         // const decoded = jwtDecode(req.cookies["access-token"]);
         const decoded = req.session.user;
