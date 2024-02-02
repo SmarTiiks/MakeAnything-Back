@@ -29,12 +29,12 @@ const cookieParser = require('cookie-parser');
 app.use(cookieParser());
 
 // session
-app.use(session({
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: true,
-    cookie: {secure: false}
-}));
+// app.use(session({
+//     secret: process.env.SECRET,
+//     resave: false,
+//     saveUninitialized: true,
+//     cookie: {secure: false}
+// }));
 
 // JWT
 const {createToken, validateToken} = require('./JWT');
@@ -69,13 +69,15 @@ app.set('view engine', 'ejs');
 //     });
 // });
 
+
+
 app.get('/getJwt', /*validateToken,*/ function(req, res) {
-    console.log(req.session);
-    console.log(req.session.user);
-    if(req.session.user){
-        // const decoded = jwtDecode(req.cookies["access-token"]);
-        const decoded = req.session.user;
-        console.log(decoded);
+    // console.log(req.session);
+    // console.log(req.session.user);
+    if(req.cookies["access-token"]){
+        const decoded = jwtDecode(req.cookies["access-token"]);
+        // const decoded = req.session.user;
+        // console.log(decoded);
         res.json(decoded);
     }
     else{
@@ -113,10 +115,9 @@ app.get('/getJwt', /*validateToken,*/ function(req, res) {
 const appUser = require('./appUser');
 appUser.doAll(app);
 
-
 // model related code
 const appModel = require('./appModel');
-appModel.doAll(app);
+appModel.doAll(app, upload);
 
 // app.all('*', function(req, res) {
 //     res.redirect("/");

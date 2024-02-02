@@ -51,18 +51,18 @@ function doAll(app) {
             if(user){
                 if(bcrypt.compareSync(req.body.password, user.password)){
                     console.log('User found');
-                    // const accessToken = createToken(user);
-                    req.session.user = user;
-                    req.session.save();
-                    // res.cookie('access-token', accessToken, {
-                    //     maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
-                    //     httpOnly: true
-                    //     // secure: true,
-                    //     // domain: process.env.FRONTEND_URL
-                    // });
-                    console.log(req.session);
+                    const accessToken = createToken(user);
+                    // req.session.user = user;
+                    // req.session.save();
+                    res.cookie('access-token', accessToken, {
+                        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+                        secure: false,
+                        httpOnly: false
+                        // domain: process.env.FRONTEND_URL
+                    });
+                    // console.log(req.session);
                     console.log("cookie created successfully");
-                    console.log(req.session.user);
+                    // console.log(req.session.user);
                     res.redirect(process.env.FRONTEND_URL + '/');
                     // res.json(accessToken);
                 } else {
@@ -76,22 +76,24 @@ function doAll(app) {
         });
     });
 
-    app.get('/monCompte', function(req, res) {
-        if(req.session.user) {
-            Model.find({auteurID : req.session.user._id})
+    app.get('/monCompte/:id', function(req, res) {
+        // if(req.cookies["access-token"]) {
+            console.log("moncompte");
+            Model.find({auteurID : req.params.id})
             .then((modeles) =>{
-                res.render('MonCompte', {user : req.session.user, modeles : modeles});
+                res.json(modeles);
             }).catch((err) => {
                 res.status(404).send("Erreur lors de la recherche des modèles");
             });
-        } else {
-            res.redirect('/');
-        }
+        // } else {
+        //     // res.redirect('/');
+        //     res.status(404).send("Vous n'êtes pas connecté");
+        // }
     });
 
     app.get('/logout', function(req, res) {
-        // res.clearCookie('access-token');
-        req.session.destroy();
+        res.clearCookie('access-token');
+        // req.session.destroy();
         console.log("token destroyed");
         res.json("token destroyed");
     });

@@ -3,37 +3,52 @@ const Model = require('./models/Model');
 const bcrypt = require('bcrypt');
 
 const Comment = require('./models/Comment');
+const { validateToken } = require('./JWT');
+const {jwtDecode} = require('jwt-decode');
 
-function doAll(app) {
+function doAll(app, upload) {
 
     app.get('/newModel', function(req, res) {
-        if(req.session.user) {
+        if(req.cookies["access-token"]) {
             res.render('newModel', {user : req.session.user});
         } else {
             res.redirect('/');
         }
     });
 
-    app.post('/api/newModel', function(req, res) {
-        if(req.session.user) {
+    app.post('/api/newModel', validateToken, upload.any(), function(req, res) {
+        if(req.cookies["access-token"]) {
+            console.log("ceate with id: " + jwtDecode(req.cookies["access-token"]).id);
+            console.log("-----------------" + req.cookies["access-token"]+"-------------");
             var nom = req.body.nom;
             var description = req.body.description;
             var telechargement = 0;
             var note = 0;
             var conseils = req.body.conseils;
+            var pictures = [];
+            var files = [];
+            req.files.forEach(upload => {
+                if (upload.fieldname == "pictures")
+                    pictures.push(upload.filename);
+                else if (upload.fieldname == "files")
+                    files.push(upload.filename);
+            });
             var model = new Model({
                 nom : nom,
                 description : description,
                 telechargement : telechargement,
                 note : note,
                 conseils : conseils,
-                auteurID : req.session.user._id
+                auteurID : jwtDecode(req.cookies["access-token"]).id,
+                tags : [],
+                pictures: pictures,
+                files : files
             });
             console.log(model);
             model.save()
-            .then(function(model) {
-                res.redirect('/moncompte');
-            })
+            .then( mod =>
+                {res.json("saved");}
+            )
             .catch(function(err) {
                 res.status(500).send(err);
             });

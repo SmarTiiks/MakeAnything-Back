@@ -9,7 +9,7 @@ const contactSchema = mongoose.Schema({
     auteurID : {type : String},
     likes : {type : Number, default : 0},
     collections : {type : Number, default : 0},
-    tags : {type : Array},
+    tags : {type : Array, default : []},
     date : {type : Date, default : Date.now},
     pictures : {type : Array},
     files : {type : Array},
