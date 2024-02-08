@@ -4,7 +4,40 @@ var path = require('path');
 require('dotenv').config();
 const bcrypt = require('bcrypt');
 const cors = require('cors');
-var session = require('express-session');
+
+// Sécurité
+    // TooBusy
+    const toobusy = require('toobusy-js');
+    app.use(function(req, res, next) {
+        if (toobusy()) {
+            res.send(503, "Server too busy. Please try again later.");
+        } else {
+            next();
+        }
+    });
+
+    // SVG Captcha
+    const session = require('express-session');
+    const svgCaptcha = require('svg-captcha');
+    app.use(session({
+        secret: process.env.SECRET,
+        resave: false,
+        saveUninitialized: true
+    }));
+
+    // hpp
+    const hpp = require('hpp');
+    app.use(hpp());
+
+    // Helmet
+    const helmet = require('helmet');
+    app.use(helmet());
+
+
+// No Cache
+const nocache = require('nocache');
+app.use(nocache());
+
 
 // Multer
 const multer = require('multer');
@@ -27,14 +60,6 @@ app.use(cors({credentials: true, origin: process.env.FRONTEND_URL}));
 // cookie parser
 const cookieParser = require('cookie-parser');
 app.use(cookieParser());
-
-// session
-// app.use(session({
-//     secret: process.env.SECRET,
-//     resave: false,
-//     saveUninitialized: true,
-//     cookie: {secure: false}
-// }));
 
 // JWT
 const {createToken, validateToken} = require('./JWT');
@@ -82,6 +107,27 @@ app.get('/getJwt', /*validateToken,*/ function(req, res) {
     }
     else{
         res.json(null);
+    }
+});
+
+app.get('/captcha', function(req, res) {
+    const captcha = svgCaptcha.create({noise: 8, size: 6, ignoreChars: '0o1iLIO'});
+    req.session.captcha = captcha.text;
+    console.log("Captcha generated: " + req.session.captcha);
+    res.type('svg');
+    res.status(200).send(captcha.data);
+});
+
+app.post('/verify', function(req, res) {
+    // console.log(req.body);
+    const userInput = req.body.captcha;
+    // console.log(userInput, req.session);
+    if(userInput === req.session.captcha) {
+        console.log("Captcha is Valid");
+        res.status(200).send("Valid");
+    } else {
+        console.log("Captcha is Invalid");
+        res.status(200).send("Invalid");
     }
 });
 

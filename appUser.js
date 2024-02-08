@@ -7,6 +7,7 @@ const multer = require('multer');
 const express = require('express');
 const fs = require('fs');
 var session = require('express-session');
+const { log } = require('console');
 
 function doAll(app) {
     app.use(express.static('uploads'));
@@ -52,7 +53,7 @@ function doAll(app) {
                 if(bcrypt.compareSync(req.body.password, user.password)){
                     console.log('User found');
                     const accessToken = createToken(user);
-                    // req.session.user = user;
+                    // req.cookies["access-token"] = user;
                     // req.session.save();
                     res.cookie('access-token', accessToken, {
                         maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
@@ -62,7 +63,7 @@ function doAll(app) {
                     });
                     // console.log(req.session);
                     console.log("cookie created successfully");
-                    // console.log(req.session.user);
+                    // console.log(req.cookies["access-token"]);
                     res.redirect(process.env.FRONTEND_URL + '/');
                     // res.json(accessToken);
                 } else {
@@ -76,10 +77,10 @@ function doAll(app) {
         });
     });
 
-    app.get('/monCompte/:id', function(req, res) {
+    app.get('/monCompte', validateToken, function(req, res) {
         // if(req.cookies["access-token"]) {
-            console.log("moncompte");
-            Model.find({auteurID : req.params.id})
+            console.log(jwtDecode(req.cookies["access-token"]).id);
+            Model.find({auteurID : jwtDecode(req.cookies["access-token"]).id})
             .then((modeles) =>{
                 res.json(modeles);
             }).catch((err) => {
