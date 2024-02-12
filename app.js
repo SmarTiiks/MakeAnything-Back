@@ -31,7 +31,7 @@ const cors = require('cors');
 
     // Helmet
     const helmet = require('helmet');
-    app.use(helmet());
+    app.use(helmet({crossOriginResourcePolicy: { policy: "cross-origin" }}));
 
 
 // No Cache

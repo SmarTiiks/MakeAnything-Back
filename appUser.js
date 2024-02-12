@@ -78,23 +78,25 @@ function doAll(app) {
     });
 
     app.get('/monCompte', validateToken, function(req, res) {
-        // if(req.cookies["access-token"]) {
-            console.log(jwtDecode(req.cookies["access-token"]).id);
+        if( jwtDecode(req.cookies["access-token"]).admin){
+            Model.find().then((modeles) => {
+                res.json(modeles);
+            }).catch((err) => {
+                res.status(404).send("Erreur lors de la recherche des modèles");
+            });
+        }else{
+        
             Model.find({auteurID : jwtDecode(req.cookies["access-token"]).id})
             .then((modeles) =>{
                 res.json(modeles);
             }).catch((err) => {
                 res.status(404).send("Erreur lors de la recherche des modèles");
             });
-        // } else {
-        //     // res.redirect('/');
-        //     res.status(404).send("Vous n'êtes pas connecté");
-        // }
-    });
+
+    }});
 
     app.get('/logout', function(req, res) {
         res.clearCookie('access-token');
-        // req.session.destroy();
         console.log("token destroyed");
         res.json("token destroyed");
     });

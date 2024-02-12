@@ -1,12 +1,24 @@
 const { render } = require('ejs');
 const Model = require('./models/Model');
 const bcrypt = require('bcrypt');
+const fs = require('fs');
+
 
 const Comment = require('./models/Comment');
 const { validateToken } = require('./JWT');
 const {jwtDecode} = require('jwt-decode');
 
 function doAll(app, upload) {
+
+    app.get('/models', function(req, res) {
+        Model.find()
+        .then(function(models){
+            res.json(models);
+        })
+        .catch(function(err){
+            res.status(400).send(err);
+        })
+    });
 
     app.post('/api/newModel', validateToken, upload.any(), function(req, res) {
         if(req.cookies["access-token"]) {
@@ -49,73 +61,94 @@ function doAll(app, upload) {
         }
     });
 
-    app.get('/models/:id/edit', function(req, res) {
-        if(req.cookies["access-token"]) {
-            Model.findById(req.params.id)
-            .then(function(model) {
-                if(model.auteurID == req.cookies["access-token"]._id) {
-                    res.render('editModel', {model : model, user : req.cookies["access-token"]});
-                } else {
-                    res.redirect('/');
-                }
-            })
-            .catch(function(err) {
-                res.status(500).send(err);
-            });
-        } else {
-            res.redirect('/');
-        }
-    });
-
     app.put('/api/editModel/:id', upload.any(), function(req, res) {
         if(req.cookies["access-token"]) {
-            var files = [];
+            var fichier = [];
             var pictures = [];
             for (var i = 0; i < req.files.length; i++){
                 if (req.files[i].fieldname == "pictures")
                     pictures.push(req.files[i].filename);
                 else if (req.files[i].fieldname == "files")
-                    files.push(req.files[i].filename);
+                    fichier.push(req.files[i].filename);
             }
             var newData = {
                 nom : req.body.nom,
                 description : req.body.desc,
                 conseils : req.body.conseils,
             };
-            if (files != [])
-                {newData.files = files;}
-            if (pictures != []){
+            Model.findById(req.params.id).then(function(model) {
+                console.log(typeof(fichier));
+                if (!Array.isArray(fichier) || fichier.length > 0){
+                    console.log('pass');
+                    model.files.forEach(function(file){
+                        try{
+                            fs.unlinkSync('uploads/'+file);
+                        }
+                        catch{console.error}
+                        console.log(`removed %s`, file);
+                    })
+                }
+                if (!Array.isArray(pictures) || pictures.length > 0){
+                    console.log('pictures');
+                    console.log(pictures);
+                    model.pictures.forEach(function(file){
+                        try{
+                            fs.unlinkSync('uploads/'+file);
+                        }
+                        catch{console.error}
+                        console.log(`removed %s`, file);
+                    })
+                }
+            })
+            if (!Array.isArray(fichier) || fichier.length > 0)
+                {newData.files = fichier;}
+            if (!Array.isArray(pictures) || pictures.length > 0){
                 newData.pictures = pictures;
             }
             Model.findById(req.params.id)
             .then(function(model) {
-                if(model.auteurID == req.cookies["access-token"]._id) {
+                if(model.auteurID == jwtDecode(req.cookies["access-token"]).id || jwtDecode(req.cookies["access-token"]).admin) {
                     Model.findByIdAndUpdate(req.params.id, {$set: newData})
                     .then(function(model) {
-                        res.redirect('/moncompte');
+                        console.log('updated');
+                        res.json('updated');
                     })
                     .catch(function(err) {
                         res.status(500).send(err);
                     });
                 } else {
-                    res.redirect('/');
+                    res.json('not the author');
                 }
             })
             .catch(function(err) {
                 res.status(500).send(err);
             });
         } else {
-            res.redirect('/');
+            res.json('not logged in');
         }
     });
 
     app.delete('/api/models/:id/delete', validateToken, function(req, res) {
         if(req.cookies["access-token"]) {
             console.log("delete with id: " + jwtDecode(req.cookies["access-token"]).id);
-            var auteur = jwtDecode(req.cookies["access-token"]).id;
+            var auteur = jwtDecode(req.cookies["access-token"]);
             Model.findById(req.params.id)
             .then(function(model) {
-                if(model.auteurID == auteur) {
+                if(model.auteurID == auteur.id || auteur.admin) {
+                    model.files.forEach(function(file){
+                        try{
+                            fs.unlinkSync('uploads/'+file);
+                        }
+                        catch{console.error}
+                        console.log(`removed file: %s`, file);
+                    })
+                    model.pictures.forEach(function(file){
+                        try{
+                            fs.unlinkSync('uploads/'+file);
+                        }
+                        catch{console.error}
+                        console.log(`removed picture: %s`, file);
+                    })
                     Model.findByIdAndDelete(req.params.id)
                     .then(function(model) {
                         console.log("model deleted");
