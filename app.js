@@ -79,30 +79,11 @@ mongoose.connect(url)
 .then(console.log("MongoDB connected"))
 .catch(err => console.log(err));
 
-app.set('view engine', 'ejs');
+//------------------------------------ Routes ------------------------------------//
 
-// Models:
-
-
-
-
-// app.get('/', function(req, res) {
-//     Contact.find().then(dataset => {
-//         res.json(dataset);
-//     }).catch(err => {
-//         console.log(err);
-//     });
-// });
-
-
-
-app.get('/getJwt', /*validateToken,*/ function(req, res) {
-    // console.log(req.session);
-    // console.log(req.session.user);
+app.get('/getJwt', function(req, res) {
     if(req.cookies["access-token"]){
         const decoded = jwtDecode(req.cookies["access-token"]);
-        // const decoded = req.session.user;
-        // console.log(decoded);
         res.json(decoded);
     }
     else{
@@ -119,9 +100,7 @@ app.get('/captcha', function(req, res) {
 });
 
 app.post('/verify', function(req, res) {
-    // console.log(req.body);
     const userInput = req.body.captcha;
-    // console.log(userInput, req.session);
     if(userInput === req.session.captcha) {
         console.log("Captcha is Valid");
         res.status(200).send("Valid");
@@ -130,32 +109,6 @@ app.post('/verify', function(req, res) {
         res.status(200).send("Invalid");
     }
 });
-
-//     app.put("/editpost/:id", function(req, res) {
-//         const Data = {
-//             sujet : req.body.sujet,
-//             sous_titre : req.body.sous_titre,
-//             auteur : req.body.auteur,
-//             description: req.body.description
-//         };
-//         Post.updateOne({_id: req.params.id}, {$set: Data})
-//         .then(dataset => {
-//             console.log("post updated to database");
-//             res.redirect(process.env.FRONTEND_URL + '/blogs');
-//         }).catch(err => {
-//             console.log(err);
-//         });
-//     });
-    
-//     app.delete("/delete/:id", function(req, res) {
-//         Contact.deleteOne({_id: req.params.id})
-//         .then(dataset => {
-//             console.log("item deleted from database");
-//             res.redirect('/');
-//         }).catch(err => {
-//             console.log(err);
-//         });
-//     });
 
 // user related code
 const appUser = require('./appUser');

@@ -6,6 +6,7 @@ const contactSchema = mongoose.Schema({
     admin : {type : Boolean, default : false},
     picture: {type : String , default : ""},
     likedModels: {type : Array, default : []},
+    Collection: {type : Array, default : []},
 });
 
 module.exports = mongoose.model('User', contactSchema);

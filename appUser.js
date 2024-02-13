@@ -10,6 +10,7 @@ var session = require('express-session');
 const { log } = require('console');
 
 function doAll(app) {
+
     app.use(express.static('uploads'));
     const storage = multer.diskStorage({
         destination: function(req, file, cb) {
@@ -36,7 +37,6 @@ function doAll(app) {
         .then( item => {
             console.log("Utilisateur créé");
             res.json("Utilisateur créé");
-            // res.redirect(process.env.FRONTEND_URL + '/connexion');
         }).catch(err => {
             if(picture !== ""){
             fs.unlinkSync('uploads/' + picture);
@@ -53,19 +53,13 @@ function doAll(app) {
                 if(bcrypt.compareSync(req.body.password, user.password)){
                     console.log('User found');
                     const accessToken = createToken(user);
-                    // req.cookies["access-token"] = user;
-                    // req.session.save();
                     res.cookie('access-token', accessToken, {
                         maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
                         secure: false,
                         httpOnly: false
-                        // domain: process.env.FRONTEND_URL
                     });
-                    // console.log(req.session);
                     console.log("cookie created successfully");
-                    // console.log(req.cookies["access-token"]);
                     res.redirect(process.env.FRONTEND_URL + '/');
-                    // res.json(accessToken);
                 } else {
                     return res.status(404).json("Invalid password");
                 }
