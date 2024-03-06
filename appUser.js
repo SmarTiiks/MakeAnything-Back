@@ -59,7 +59,8 @@ function doAll(app) {
                         httpOnly: false
                     });
                     console.log("cookie created successfully");
-                    res.redirect(process.env.FRONTEND_URL + '/');
+                    res.json("cookie created successfully");
+                    // res.redirect(process.env.FRONTEND_URL + '/');
                 } else {
                     return res.status(404).json("Invalid password");
                 }
