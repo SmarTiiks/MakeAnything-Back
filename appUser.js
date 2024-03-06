@@ -54,7 +54,7 @@ function doAll(app) {
                     console.log('User found');
                     const accessToken = createToken(user);
                     res.cookie('access-token', accessToken, {
-                        maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days
+                        maxAge: 1000 * 60 * 60 * 24 * 1, 
                         secure: false,
                         httpOnly: false
                     });
