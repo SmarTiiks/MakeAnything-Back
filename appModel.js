@@ -1,10 +1,12 @@
 const { render } = require('ejs');
+
 const Model = require('./models/Model');
+const Comment = require('./models/Comment');
+
 const bcrypt = require('bcrypt');
 const fs = require('fs');
 
 
-const Comment = require('./models/Comment');
 const { validateToken } = require('./JWT');
 const {jwtDecode} = require('jwt-decode');
 
@@ -167,17 +169,33 @@ function doAll(app, upload) {
     app.get('/model/:id', function(req, res) {
         Model.findById(req.params.id)
         .then(function(model) {
-            console.log(model);
             res.json(model);
             }).catch(function(err) {
                 res.status(500).send(err);
             });
         });
 
+    // --------------------------------- Comments part --------------------------------- //
+
+    app.get('/api/comments/:modelId/:motherId', function (req,res){
+        console.log('entered');
+
+        Comment.find({modelID : req.params.modelId, motherID : req.params.motherId == 'none' ? '' : req.params.motherId}).sort([['date','descending']])
+        .then(function(comments){
+            console.log('comments');
+            console.log(comments);
+            res.json(comments);
+        })
+        .catch(function(err){
+            res.status(500).send(err);
+        });
+    });
+
     app.post('/api/addComment/:id', function(req, res) {
+        var auteur = jwtDecode(req.cookies["access-token"]);
         var name = req.body.name;
         var content = req.body.content;
-        var auteurID = req.cookies["access-token"]._id;
+        var auteurID = auteur.id;
         var modelID = req.params.id;
         var comment = new Comment({
             name : name,
@@ -186,7 +204,8 @@ function doAll(app, upload) {
             modelID : modelID
         });
         comment.save().then(function(comment) {
-            res.redirect('/model/' + req.params.id);
+            // res.redirect('/model/' + req.params.id
+            res.json("comment saved");
         }).catch(function(err) {
         res.status(500).send(err);
         });

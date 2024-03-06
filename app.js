@@ -38,6 +38,12 @@ const cors = require('cors');
 const nocache = require('nocache');
 app.use(nocache());
 
+// Swagger for Documentation
+
+const swaggerUi = require('swagger-ui-express');
+const swaggerDocs = require('./swagger-output.json');
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Multer
 const multer = require('multer');
