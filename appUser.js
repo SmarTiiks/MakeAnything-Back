@@ -52,6 +52,7 @@ function doAll(app) {
             if(user){
                 if(bcrypt.compareSync(req.body.password, user.password)){
                     console.log('User found');
+                    console.log(user);
                     const accessToken = createToken(user);
                     res.cookie('access-token', accessToken, {
                         maxAge: 1000 * 60 * 60 * 24 * 1, 

@@ -4,7 +4,7 @@ const contactSchema = mongoose.Schema({
     email : {type : String, required : true, unique : true},
     password : {type : String, required : true},
     admin : {type : Boolean, default : false},
-    picture: {type : String , default : ""},
+    picture: {type : String , default : "default.png"},
     likedModels: {type : Array, default : []},
     Collection: {type : Array, default : []},
 });

@@ -8,7 +8,8 @@ const createToken = (user) => {
     const accessToken = sign({
         username: user.username,
         id: user._id,
-        admin: user.admin
+        admin: user.admin,
+        picture: user.picture
     },
     secret);
     return accessToken;

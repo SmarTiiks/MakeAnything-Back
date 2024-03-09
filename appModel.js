@@ -178,8 +178,6 @@ function doAll(app, upload) {
     // --------------------------------- Comments part --------------------------------- //
 
     app.get('/api/comments/:modelId/:motherId', function (req,res){
-        console.log('entered');
-
         Comment.find({modelID : req.params.modelId, motherID : req.params.motherId == 'none' ? '' : req.params.motherId}).sort([['date','descending']])
         .then(function(comments){
             console.log('comments');
@@ -191,22 +189,33 @@ function doAll(app, upload) {
         });
     });
 
-    app.post('/api/addComment/:id', function(req, res) {
+    app.post('/api/addComment/:id/:motherId', validateToken, upload.single('picture'), function(req, res) {
+        console.log('addComment');
         var auteur = jwtDecode(req.cookies["access-token"]);
         var name = req.body.name;
         var content = req.body.content;
         var auteurID = auteur.id;
         var modelID = req.params.id;
+        var motherID = "";
+        var picture = req.file ? req.file.filename : null;
+        if (req.params.motherId != 'none') {
+            motherID = req.params.motherId;
+        }
         var comment = new Comment({
             name : name,
             content : content,
             auteurID : auteurID,
-            modelID : modelID
+            auteurName: auteur.username,
+            auteurPic: auteur.picture,
+            modelID : modelID,
+            motherID: motherID,
+            picture : picture
         });
         comment.save().then(function(comment) {
-            // res.redirect('/model/' + req.params.id
+            console.log('comment saved');
             res.json("comment saved");
         }).catch(function(err) {
+            console.log("Add comment error");
         res.status(500).send(err);
         });
     });

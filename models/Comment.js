@@ -4,6 +4,8 @@ const contactSchema = mongoose.Schema({
     name : {type : String, required : true},
     content : {type : String, required : true},
     auteurID : {type : String, required : true},
+    auteurName: {type : String, required : true},
+    auteurPic: {type : String},
     modelID : {type : String, required : true},
     date : {type : Date, default : Date.now},
     motherID : {type : String, default : ""},
