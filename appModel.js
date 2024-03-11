@@ -8,22 +8,22 @@ const fs = require('fs');
 
 
 const { validateToken } = require('./JWT');
-const {jwtDecode} = require('jwt-decode');
+const { jwtDecode } = require('jwt-decode');
 
 function doAll(app, upload) {
 
-    app.get('/models', function(req, res) {
+    app.get('/models', function (req, res) {
         Model.find()
-        .then(function(models){
-            res.json(models);
-        })
-        .catch(function(err){
-            res.status(400).send(err);
-        })
+            .then(function (models) {
+                res.json(models);
+            })
+            .catch(function (err) {
+                res.status(400).send(err);
+            })
     });
 
-    app.post('/api/newModel', validateToken, upload.any(), function(req, res) {
-        if(req.cookies["access-token"]) {
+    app.post('/api/newModel', validateToken, upload.any(), function (req, res) {
+        if (req.cookies["access-token"]) {
             var nom = req.body.nom;
             var description = req.body.desc;
             var telechargement = 0;
@@ -38,159 +38,236 @@ function doAll(app, upload) {
                     files.push(upload.filename);
             });
             var model = new Model({
-                nom : nom,
-                description : description,
-                telechargement : telechargement,
-                note : note,
-                conseils : conseils,
-                auteurID : jwtDecode(req.cookies["access-token"]).id,
-                tags : [],
+                nom: nom,
+                description: description,
+                telechargement: telechargement,
+                note: note,
+                conseils: conseils,
+                auteurID: jwtDecode(req.cookies["access-token"]).id,
+                tags: [],
                 pictures: pictures,
-                files : files
+                files: files
             });
             model.save()
-            .then( mod =>
-                {res.json("saved");}
-            )
-            .catch(function(err) {
-                res.status(500).send(err);
-            });
+                .then(mod => { res.json("saved"); }
+                )
+                .catch(function (err) {
+                    res.status(500).send(err);
+                });
         } else {
             res.status(401).send("not logged in");
         }
     });
 
-    app.put('/api/editModel/:id', upload.any(), function(req, res) {
-        if(req.cookies["access-token"]) {
+    app.put('/api/editModel/:id', upload.any(), function (req, res) {
+        if (req.cookies["access-token"]) {
             var fichier = [];
             var pictures = [];
-            for (var i = 0; i < req.files.length; i++){
+            for (var i = 0; i < req.files.length; i++) {
                 if (req.files[i].fieldname == "pictures")
                     pictures.push(req.files[i].filename);
                 else if (req.files[i].fieldname == "files")
                     fichier.push(req.files[i].filename);
             }
             var newData = {
-                nom : req.body.nom,
-                description : req.body.desc,
-                conseils : req.body.conseils,
+                nom: req.body.nom,
+                description: req.body.desc,
+                conseils: req.body.conseils,
             };
-            Model.findById(req.params.id).then(function(model) {
-                if (!Array.isArray(fichier) || fichier.length > 0){
-                    model.files.forEach(function(file){
-                        try{
-                            fs.unlinkSync('uploads/'+file);
+            Model.findById(req.params.id).then(function (model) {
+                if (!Array.isArray(fichier) || fichier.length > 0) {
+                    model.files.forEach(function (file) {
+                        try {
+                            fs.unlinkSync('uploads/' + file);
                         }
-                        catch{console.error}
+                        catch { console.error }
                         console.log(`removed %s`, file);
                     })
                 }
-                if (!Array.isArray(pictures) || pictures.length > 0){
-                    model.pictures.forEach(function(file){
-                        try{
-                            fs.unlinkSync('uploads/'+file);
+                if (!Array.isArray(pictures) || pictures.length > 0) {
+                    model.pictures.forEach(function (file) {
+                        try {
+                            fs.unlinkSync('uploads/' + file);
                         }
-                        catch{console.error}
+                        catch { console.error }
                         console.log(`removed %s`, file);
                     })
                 }
             })
-            if (!Array.isArray(fichier) || fichier.length > 0)
-                {newData.files = fichier;}
-            if (!Array.isArray(pictures) || pictures.length > 0){
+            if (!Array.isArray(fichier) || fichier.length > 0) { newData.files = fichier; }
+            if (!Array.isArray(pictures) || pictures.length > 0) {
                 newData.pictures = pictures;
             }
             Model.findById(req.params.id)
-            .then(function(model) {
-                if(model.auteurID == jwtDecode(req.cookies["access-token"]).id || jwtDecode(req.cookies["access-token"]).admin) {
-                    Model.findByIdAndUpdate(req.params.id, {$set: newData})
-                    .then(function(model) {
-                        console.log('updated');
-                        res.json('updated');
-                    })
-                    .catch(function(err) {
-                        res.status(500).send(err);
-                    });
-                } else {
-                    res.json('not the author');
-                }
-            })
-            .catch(function(err) {
-                res.status(500).send(err);
-            });
+                .then(function (model) {
+                    if (model.auteurID == jwtDecode(req.cookies["access-token"]).id || jwtDecode(req.cookies["access-token"]).admin) {
+                        Model.findByIdAndUpdate(req.params.id, { $set: newData })
+                            .then(function (model) {
+                                console.log('updated');
+                                res.json('updated');
+                            })
+                            .catch(function (err) {
+                                res.status(500).send(err);
+                            });
+                    } else {
+                        res.json('not the author');
+                    }
+                })
+                .catch(function (err) {
+                    res.status(500).send(err);
+                });
         } else {
             res.json('not logged in');
         }
     });
 
-    app.delete('/api/models/:id/delete', validateToken, function(req, res) {
-        if(req.cookies["access-token"]) {
+    app.delete('/api/models/:id/delete', validateToken, function (req, res) {
+        if (req.cookies["access-token"]) {
             var auteur = jwtDecode(req.cookies["access-token"]);
             Model.findById(req.params.id)
-            .then(function(model) {
-                if(model.auteurID == auteur.id || auteur.admin) {
-                    model.files.forEach(function(file){
-                        try{
-                            fs.unlinkSync('uploads/'+file);
-                        }
-                        catch{console.error}
-                        console.log(`removed file: %s`, file);
-                    })
-                    model.pictures.forEach(function(file){
-                        try{
-                            fs.unlinkSync('uploads/'+file);
-                        }
-                        catch{console.error}
-                        console.log(`removed picture: %s`, file);
-                    })
-                    Model.findByIdAndDelete(req.params.id)
-                    .then(function(model) {
-                        console.log("model deleted");
-                        res.json("model deleted");
-                    })
-                    .catch(function(err) {
-                        console.log(err);
-                        res.status(500).send(err);
-                    });
-                } else {
-                    console.log("not the author");
-                }
-            })
-            .catch(function(err) {
-                console.log(err);
-                res.status(500).send(err);
-            });
+                .then(function (model) {
+                    if (model.auteurID == auteur.id || auteur.admin) {
+                        model.files.forEach(function (file) {
+                            try {
+                                fs.unlinkSync('uploads/' + file);
+                            }
+                            catch { console.error }
+                            console.log(`removed file: %s`, file);
+                        })
+                        model.pictures.forEach(function (file) {
+                            try {
+                                fs.unlinkSync('uploads/' + file);
+                            }
+                            catch { console.error }
+                            console.log(`removed picture: %s`, file);
+                        })
+                        Model.findByIdAndDelete(req.params.id)
+                            .then(function (model) {
+                                console.log("model deleted");
+                                res.json("model deleted");
+                            })
+                            .catch(function (err) {
+                                console.log(err);
+                                res.status(500).send(err);
+                            });
+                    } else {
+                        console.log("not the author");
+                    }
+                })
+                .catch(function (err) {
+                    console.log(err);
+                    res.status(500).send(err);
+                });
         } else {
             console.log("not logged in");
             res.redirect('/');
         }
     });
 
-    app.get('/model/:id', function(req, res) {
+    app.get('/model/:id', function (req, res) {
         Model.findById(req.params.id)
-        .then(function(model) {
-            res.json(model);
-            }).catch(function(err) {
+            .then(function (model) {
+                res.json(model);
+            }).catch(function (err) {
                 res.status(500).send(err);
             });
-        });
+    });
 
     // --------------------------------- Comments part --------------------------------- //
 
-    app.get('/api/comments/:modelId/:motherId', function (req,res){
-        Comment.find({modelID : req.params.modelId, motherID : req.params.motherId == 'none' ? '' : req.params.motherId}).sort([['date','descending']])
-        .then(function(comments){
-            console.log('comments');
-            console.log(comments);
-            res.json(comments);
-        })
-        .catch(function(err){
-            res.status(500).send(err);
-        });
+    app.get('/api/comment/:id', function (req, res) {
+        Comment.findById(req.params.id)
+            .then(function (comment) {
+                res.json(comment);
+            })
+            .catch(function (err) {
+                res.status(400).send(err);
+            });
     });
 
-    app.post('/api/addComment/:id/:motherId', validateToken, upload.single('picture'), function(req, res) {
-        console.log('addComment');
+    app.put('/api/modifyComment/:id', validateToken, upload.single('picture'), function (req, res) {
+        console.log('modifyComment');
+        var auteur = jwtDecode(req.cookies["access-token"]);
+        var newData = {
+            name: req.body.name,
+            content: req.body.content,
+            picture: (req.file && !req.deleteImg) ? req.file.filename : null
+        };
+        Comment.findById(req.params.id)
+            .then(function (comment) {
+                if (comment.auteurID == auteur.id || auteur.admin) {
+                    if (req.deleteImg || req.file) {
+                        try {
+                            fs.unlinkSync('uploads/' + comment.picture);
+                        }
+                        catch { console.error }
+                        console.log(`removed %s`, comment.picture);
+                        if (req.deleteImg && req.file) {
+                            try{
+                                fs.unlinkSync('uploads/' + req.file.filename);
+                            }
+                            catch { console.error };
+                        }
+                    }
+                    Comment.findByIdAndUpdate(req.params.id, { $set: newData })
+                        .then(function (comment) {
+                            console.log('comment updated');
+                            res.json('comment updated');
+                        })
+                        .catch(function (e) {
+                            console.log(e);
+                            res.status(500).send(e);
+                        });
+                } else {
+                    console.log('not the author');
+                    res.json('not the author');
+                }
+            }, function (e) {
+                console.log(e);
+                res.status(500).send(e);
+            });
+    });
+
+    app.delete('/api/deleteComment/:id', validateToken, function (req, res) {
+        var auteur = jwtDecode(req.cookies["access-token"]);
+        Comment.findById(req.params.id)
+            .then(function (comment) {
+                if (comment.auteurID == auteur.id || auteur.admin) {
+                    try {
+                        fs.unlinkSync('uploads/' + comment.picture);
+                    }
+                    catch { console.error }
+                    console.log(`removed %s`, comment.picture);
+                    Comment.findByIdAndDelete(req.params.id)
+                        .then(function (comment) {
+                            console.log('comment deleted');
+                            res.json('comment deleted');
+                        })
+                        .catch(function (e) {
+                            console.log(e);
+                            res.status(500).send(e);
+                        });
+                } else {
+                    console.log('not the author');
+                    res.json('not the author');
+                }
+            }, function (e) {
+                console.log(e);
+                res.status(500).send(e);
+            });
+    });
+
+    app.get('/api/comments/:modelId/:motherId', function (req, res) {
+        Comment.find({ modelID: req.params.modelId, motherID: req.params.motherId == 'none' ? '' : req.params.motherId }).sort([['date', 'descending']])
+            .then(function (comments) {
+                res.json(comments);
+            })
+            .catch(function (err) {
+                res.status(500).send(err);
+            });
+    });
+
+    app.post('/api/addComment/:id/:motherId', validateToken, upload.single('picture'), function (req, res) {
         var auteur = jwtDecode(req.cookies["access-token"]);
         var name = req.body.name;
         var content = req.body.content;
@@ -202,21 +279,21 @@ function doAll(app, upload) {
             motherID = req.params.motherId;
         }
         var comment = new Comment({
-            name : name,
-            content : content,
-            auteurID : auteurID,
+            name: name,
+            content: content,
+            auteurID: auteurID,
             auteurName: auteur.username,
             auteurPic: auteur.picture,
-            modelID : modelID,
+            modelID: modelID,
             motherID: motherID,
-            picture : picture
+            picture: picture
         });
-        comment.save().then(function(comment) {
+        comment.save().then(function (comment) {
             console.log('comment saved');
             res.json("comment saved");
-        }).catch(function(err) {
+        }).catch(function (err) {
             console.log("Add comment error");
-        res.status(500).send(err);
+            res.status(500).send(err);
         });
     });
 
