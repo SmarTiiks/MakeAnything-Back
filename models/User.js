@@ -5,7 +5,6 @@ const contactSchema = mongoose.Schema({
     password : {type : String, required : true},
     admin : {type : Boolean, default : false},
     picture: {type : String , default : "default.png"},
-    likedModels: {type : Array, default : []},
     Collection: {type : Array, default : []},
 });
 

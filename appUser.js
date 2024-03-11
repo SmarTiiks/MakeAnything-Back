@@ -55,13 +55,12 @@ function doAll(app) {
                     console.log(user);
                     const accessToken = createToken(user);
                     res.cookie('access-token', accessToken, {
-                        maxAge: 1000 * 60 * 60 * 24 * 1, 
+                        maxAge: 1000 * 60 * 60 * 24, 
                         secure: false,
                         httpOnly: false
                     });
                     console.log("cookie created successfully");
                     res.json("cookie created successfully");
-                    // res.redirect(process.env.FRONTEND_URL + '/');
                 } else {
                     return res.status(404).json("Invalid password");
                 }

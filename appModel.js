@@ -9,6 +9,7 @@ const fs = require('fs');
 
 const { validateToken } = require('./JWT');
 const { jwtDecode } = require('jwt-decode');
+const User = require('./models/User');
 
 function doAll(app, upload) {
 
@@ -164,6 +165,39 @@ function doAll(app, upload) {
         }
     });
 
+    app.put('/api/like/:id', validateToken, function (req, res) {
+        var auteur = jwtDecode(req.cookies["access-token"]);
+        Model.findByIdAndUpdate(req.params.id, { $push: { likes: auteur.id } })
+            .then(function (model) {
+                res.json('liked');
+            })
+            .catch(function (err) {
+                res.status(500).send(err);
+            });
+    });
+
+    app.put('/api/unlike/:id', validateToken, function (req, res) {
+        var auteur = jwtDecode(req.cookies["access-token"]);
+        Model.findByIdAndUpdate(req.params.id, { $pull: { likes: auteur.id } })
+            .then(function (model) {
+                res.json('unliked');
+            })
+            .catch(function (err) {
+                console.error(err);
+                res.status(400).send(err);
+            });
+    });
+
+    app.put('/api/download/:id', function (req, res) {
+        Model.findByIdAndUpdate(req.params.id, { $inc: { telechargement: 1 } })
+            .then(function (model) {
+                res.json('downloaded');
+            })
+            .catch(function (err) {
+                res.status(500).send(err);
+            });
+    });
+
     app.get('/model/:id', function (req, res) {
         Model.findById(req.params.id)
             .then(function (model) {
@@ -203,7 +237,7 @@ function doAll(app, upload) {
                         catch { console.error }
                         console.log(`removed %s`, comment.picture);
                         if (req.deleteImg && req.file) {
-                            try{
+                            try {
                                 fs.unlinkSync('uploads/' + req.file.filename);
                             }
                             catch { console.error };

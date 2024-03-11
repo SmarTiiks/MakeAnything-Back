@@ -10,7 +10,7 @@ const contactSchema = mongoose.Schema({
     note : {type : Array}, // [{id : String, note : Number}, ...]
     conseils : {type : String},
     auteurID : {type : String},
-    likes : {type : Number, default : 0},
+    likes : {type : Array, default : []},
     collections : {type : Number, default : 0},
     tags : {type : Array, default : []},
     date : {type : Date, default : Date.now},
