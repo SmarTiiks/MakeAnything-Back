@@ -167,9 +167,29 @@ function doAll(app, upload) {
 
     app.put('/api/like/:id', validateToken, function (req, res) {
         var auteur = jwtDecode(req.cookies["access-token"]);
-        Model.findByIdAndUpdate(req.params.id, { $push: { likes: auteur.id } })
+        Model.findById(req.params.id)
             .then(function (model) {
-                res.json('liked');
+                if (model.likes.includes(auteur.id)) {
+                    model.likes.splice(model.likes.indexOf(auteur.id), 1);
+                    model.save()
+                        .then(function () {
+                            console.log('unliked');
+                            res.json('unliked');
+                        })
+                        .catch(function (err) {
+                            res.status(500).send(err);
+                        });
+                } else {
+                    model.likes.push(auteur.id);
+                    model.save()
+                        .then(function () {
+                            console.log('liked');
+                            res.json('liked');
+                        })
+                        .catch(function (err) {
+                            res.status(500).send(err);
+                        });
+                }
             })
             .catch(function (err) {
                 res.status(500).send(err);
@@ -178,13 +198,25 @@ function doAll(app, upload) {
 
     app.put('/api/unlike/:id', validateToken, function (req, res) {
         var auteur = jwtDecode(req.cookies["access-token"]);
-        Model.findByIdAndUpdate(req.params.id, { $pull: { likes: auteur.id } })
+        Model.findById(req.params.id)
             .then(function (model) {
-                res.json('unliked');
+                if (model.likes.includes(auteur.id)) {
+                    model.likes.splice(model.likes.indexOf(auteur.id), 1);
+                    model.save()
+                        .then(function () {
+                            console.log('unliked');
+                            res.json('unliked');
+                        })
+                        .catch(function (err) {
+                            res.status(500).send(err);
+                        });
+                } else {
+                    console.log('not liked');
+                    res.json('not liked');
+                }
             })
             .catch(function (err) {
-                console.error(err);
-                res.status(400).send(err);
+                res.status(500).send(err);
             });
     });
 
