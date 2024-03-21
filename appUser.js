@@ -95,6 +95,95 @@ function doAll(app) {
         console.log("token destroyed");
         res.json("token destroyed");
     });
+
+    app.get('/isInCollection/:id', validateToken, function(req, res) {
+        var id = req.params.id;
+        var userID = jwtDecode(req.cookies["access-token"]).id;
+        User.findById(userID).then((user) => {
+            if (user.Collection.includes(id)){
+                res.json(true);
+            } else {
+                res.json(false);
+            }
+        }).catch((err) => {
+            res.status(500).send("Erreur lors de la recherche de l'utilisateur");
+        });
+    });
+
+    app.get('/collection', validateToken, function(req, res) {
+        console.log("collection");
+        var list = [];
+        var id = jwtDecode(req.cookies["access-token"]).id;
+        User.findById(id).then((user) => {
+            if (user.Collection.length == 0){
+                res.json([]);
+            }
+            for (let i = 0; i < user.Collection.length; i++) {
+                const element = user.Collection[i];
+                Model.findById(element).then((modele) => {
+                    list.push(modele);
+                    if (i == user.Collection.length - 1){
+                        console.log(list);
+                        res.json(list);
+                    }
+                    }).catch((err) => {
+                        res.status(500).send("Erreur lors de la recherche du modèle");
+                    });
+            }
+        }).catch((err) => {
+            res.status(500).send("Erreur lors de la recherche de l'utilisateur");
+        });
+    });
+
+    app.put('/toggleCollection/:id', validateToken, function(req, res) {
+        var id = jwtDecode(req.cookies["access-token"]).id;
+        User.findById(id).then((user) => {
+            if (user.Collection.includes(req.params.id)){
+                user.Collection.splice(user.Collection.indexOf(req.params.id), 1);
+                user.save().then((user) => {
+                    res.json("Model removed from collection");
+                }).catch((err) => {
+                    res.status(500).send("Erreur lors de la suppression du modèle de la collection");
+                });
+            } else {
+                user.Collection.push(req.params.id);
+                user.save().then((user) => {
+                    res.json("Model added to collection");
+                }).catch((err) => {
+                    res.status(500).send("Erreur lors de l'ajout du modèle à la collection");
+                });
+            }
+            }).catch((err) => {
+                res.status(500).send("Erreur lors de la recherche de l'utilisateur");
+            });
+    });
+
+    app.delete('/removeFromCollection/:id', validateToken, function(req, res) {
+        var id = jwtDecode(req.cookies["access-token"]).id;
+        User.findById(id).then((user) => {
+            if (user.Collection.includes(req.params.id)){
+                user.Collection.splice(user.Collection.indexOf(req.params.id), 1);
+                user.save().then((user) => {
+                    res.json("Model removed from collection");
+                }).catch((err) => {
+                    res.status(500).send("Erreur lors de la suppression du modèle de la collection");
+                });
+            } else {
+                res.status(404).send("Model not in collection");
+            }
+            }).catch((err) => {
+                res.status(500).send("Erreur lors de la recherche de l'utilisateur");
+            });
+    });
+
+    app.get('/getLiked', validateToken, function(req, res) {
+        var id = jwtDecode(req.cookies["access-token"]).id;
+        Model.find({likes : id}).then((modeles) => {
+            res.json(modeles);
+        }).catch((err) => {
+            res.status(500).send("Erreur lors de la recherche des modèles aimés");
+        });
+    });
 };
 
 exports.doAll = doAll;
