@@ -13,14 +13,38 @@ const User = require('./models/User');
 
 function doAll(app, upload) {
 
-    app.get('/models', function (req, res) {
-        Model.find()
-            .then(function (models) {
-                res.json(models);
-            })
-            .catch(function (err) {
-                res.status(400).send(err);
-            })
+    app.get('/models/:tag', function (req, res) {
+        var tag = req.params.tag;
+        if (tag == 'download') {
+            console.log("searching for downloads");
+            Model.find().sort([['telechargement', 'descending']])
+                .then(function (models) {
+                    res.json(models);
+                })
+                .catch(function (err) {
+                    res.status(400).send(err);
+                })
+        }
+        else if (tag == 'recent') {
+            console.log("searching for recent models");
+            Model.find().sort([['date', 'descending']])
+                .then(function (models) {
+                    res.json(models);
+                })
+                .catch(function (err) {
+                    res.status(400).send(err);
+                })
+        }
+        else {
+            console.log("searching for tag: %s", tag);
+            Model.find({  tags: tag })
+                .then(function (models) {
+                    res.json(models);
+                })
+                .catch(function (err) {
+                    res.status(400).send(err);
+                })
+        }
     });
 
     app.post('/api/newModel', validateToken, upload.any(), function (req, res) {
@@ -32,6 +56,7 @@ function doAll(app, upload) {
             var conseils = req.body.conseils;
             var pictures = [];
             var files = [];
+            var tags = req.body.tags.split(',');
             req.files.forEach(upload => {
                 if (upload.fieldname == "pictures")
                     pictures.push(upload.filename);
@@ -45,7 +70,7 @@ function doAll(app, upload) {
                 note: note,
                 conseils: conseils,
                 auteurID: jwtDecode(req.cookies["access-token"]).id,
-                tags: [],
+                tags: tags,
                 pictures: pictures,
                 files: files
             });
@@ -74,6 +99,7 @@ function doAll(app, upload) {
                 nom: req.body.nom,
                 description: req.body.desc,
                 conseils: req.body.conseils,
+                tags: req.body.tags.split(',')
             };
             Model.findById(req.params.id).then(function (model) {
                 if (!Array.isArray(fichier) || fichier.length > 0) {
