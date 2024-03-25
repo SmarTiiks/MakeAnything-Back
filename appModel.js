@@ -13,6 +13,21 @@ const User = require('./models/User');
 
 function doAll(app, upload) {
 
+    app.get('/getFile/:id', function (req, res) {
+        Model.findById(req.params.id).then(function (model) {
+            if (!model) return res.status(404).end();
+            let filePath = './uploads/' + model.files[0];
+            if (!fs.existsSync(filePath)) return res.status(404).end();
+            let file = fs.readFileSync(filePath);
+            res.writeHead(200, { 'Content-Type': 'application/octet-stream' });
+            res.end(file, 'binary');
+        }).catch(function (err) {
+            console.log("Error in getFile: %s", err);
+            res.status(500).send(err);
+        });
+    });
+
+
     app.get('/models/:tag', function (req, res) {
         var tag = req.params.tag;
         if (tag == 'download') {
