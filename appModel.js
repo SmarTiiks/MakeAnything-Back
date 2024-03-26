@@ -376,7 +376,7 @@ function doAll(app, upload) {
 
     app.post('/api/addComment/:id/:motherId', validateToken, upload.single('picture'), function (req, res) {
         var auteur = jwtDecode(req.cookies["access-token"]);
-        var name = req.body.name;
+        var name = req.body.title;
         var content = req.body.content;
         var auteurID = auteur.id;
         var modelID = req.params.id;

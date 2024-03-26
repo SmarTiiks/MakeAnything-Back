@@ -262,6 +262,29 @@
         }
       }
     },
+    "/getFile/{id}": {
+      "get": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/models/{tag}": {
       "get": {
         "description": "",
@@ -658,7 +681,7 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "name": {
+                  "title": {
                     "example": "any"
                   },
                   "content": {
