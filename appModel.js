@@ -52,7 +52,7 @@ function doAll(app, upload) {
         }
         else {
             console.log("searching for tag: %s", tag);
-            Model.find({  tags: tag })
+            Model.find({ tags: tag })
                 .then(function (models) {
                     res.json(models);
                 })
@@ -335,33 +335,52 @@ function doAll(app, upload) {
             });
     });
 
-    app.delete('/api/deleteComment/:id', validateToken, function (req, res) {
-        var auteur = jwtDecode(req.cookies["access-token"]);
-        Comment.findById(req.params.id)
+    function deleteCommentByID(id, auteur) {
+        Comment.findById(id)
             .then(function (comment) {
                 if (comment.auteurID == auteur.id || auteur.admin) {
+                    Comment.find({ motherID: id }).then(function (comments) {
+                        comments.forEach(function (comment) {
+                            deleteCommentByID(comment._id, { id: "admin", admin: true });
+                        })
+                    })
+                        .catch(function (e) {
+                            console.log(e);
+                        });
                     try {
                         fs.unlinkSync('uploads/' + comment.picture);
                     }
                     catch { console.error }
                     console.log(`removed %s`, comment.picture);
-                    Comment.findByIdAndDelete(req.params.id)
+                    Comment.findByIdAndDelete(id)
                         .then(function (comment) {
                             console.log('comment deleted');
-                            res.json('comment deleted');
+                            return 1;
                         })
                         .catch(function (e) {
                             console.log(e);
-                            res.status(500).send(e);
+                            return e;
                         });
                 } else {
                     console.log('not the author');
-                    res.json('not the author');
+                    return 'not the author';
                 }
             }, function (e) {
                 console.log(e);
-                res.status(500).send(e);
+                return e;
             });
+    }
+
+    app.delete('/api/deleteComment/:id', validateToken, function (req, res) {
+        var auteur = jwtDecode(req.cookies["access-token"]);
+        var result = deleteCommentByID(req.params.id, auteur);
+        if (result == 1) {
+            res.json('comment deleted');
+        } else if (result == 'not the author') {
+            res.json('not the author');
+        } else {
+            res.status(500).send(result);
+        }
     });
 
     app.get('/api/comments/:modelId/:motherId', function (req, res) {
@@ -376,7 +395,7 @@ function doAll(app, upload) {
 
     app.post('/api/addComment/:id/:motherId', validateToken, upload.single('picture'), function (req, res) {
         var auteur = jwtDecode(req.cookies["access-token"]);
-        var name = req.body.title;
+        var name = req.body.name;
         var content = req.body.content;
         var auteurID = auteur.id;
         var modelID = req.params.id;
@@ -399,6 +418,7 @@ function doAll(app, upload) {
             console.log('comment saved');
             res.json("comment saved");
         }).catch(function (err) {
+            console.log(err);
             console.log("Add comment error");
             res.status(500).send(err);
         });
