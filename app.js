@@ -88,8 +88,10 @@ mongoose.connect(url)
 //------------------------------------ Routes ------------------------------------//
 
 app.get('/getJwt', function(req, res) {
+    console.log("Get JWT request");
     if(req.cookies["access-token"]){
         const decoded = jwtDecode(req.cookies["access-token"]);
+        console.log(decoded);
         res.json(decoded);
     }
     else{
