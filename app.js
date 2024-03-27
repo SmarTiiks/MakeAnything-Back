@@ -1,5 +1,7 @@
 var express = require('express');
 var app = express();
+app.set("trust proxy", 1);
+
 var path = require('path');
 require('dotenv').config();
 const bcrypt = require('bcrypt');
